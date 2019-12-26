@@ -1,5 +1,6 @@
 import xml.etree.ElementTree as ET
 
+
 class Parser:
     """
     Parse a tokenized jack input into a parse tree.
