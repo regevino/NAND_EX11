@@ -14,12 +14,15 @@ class Parser:
         """
         self.__tokenizer = tokenizer
 
-    def parse(self):
+    def parse(self) -> ET.ElementTree:
         """
         Parse the token stream until there are no more tokens to parse.
         :return: ElementTree representing the parseTree
         """
-    # TODO: implement
+        # TODO: implement
+        new_element = ET.Element()
+        tree = ET.ElementTree(new_element)
+        return tree
 
     def __compile_symbol(self, element: ET.Element, string: str):
         self.__tokenizer.eat(string)
