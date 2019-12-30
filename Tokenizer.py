@@ -26,7 +26,7 @@ class Tokenizer:
     Class representing a stream of tokens parsed from a .jack file.
     """
 
-    def __init__(self, source_file):
+    def __init__(self, source_file: str):
         """
         Create a tokenizer stream over an input file.
         :param source_file: input file
@@ -49,7 +49,7 @@ class Tokenizer:
     def has_more_tokens(self):
         return self.__file is not []
 
-    def eat(self, string):
+    def eat(self, string: str):
         token = self.next_token()
         if string != token.get_content():
             raise RuntimeError
