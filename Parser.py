@@ -1,5 +1,7 @@
-import xml.etree.ElementTree as ET
-
+import os
+import sys
+# import xml.etree.ElementTree as ET
+from lxml import etree as ET
 from Tokenizer import *
 
 EXPRESSION_LIST = 'expressionList'
@@ -18,7 +20,7 @@ EXPRESSION = 'expression'
 
 UNARY_OPS = '-~'
 
-KEYWORD_CONSTS = 'truefalsenullthis'
+KEYWORD_CONSTS = ['true', 'false', 'null', 'this']
 
 PERIOD = '.'
 
@@ -76,9 +78,16 @@ class Parser:
         :return: ElementTree representing the parseTree
         """
         # TODO: implement
-        new_element = ET.Element()
-        self.__compile_class(new_element)
-        tree = ET.ElementTree(new_element)
+
+        new_element = ET.Element('ROOT')
+        try:
+            self.__compile_class(new_element)
+        except:
+            ET.dump(new_element)
+            raise
+        tree = ET.ElementTree(new_element[0])
+        print(ET.tostring(new_element, pretty_print=True))
+
         return tree
 
     def __compile_symbol(self, element: ET.Element, string):
@@ -89,14 +98,14 @@ class Parser:
 
     def __compile_identifier(self, element: ET.Element):
         token = self.__tokenizer.next_token()
-        assert token.get_type() == IDENTIFIER
+        assert token.get_type() == IDENTIFIER, "Token type is: " + token.get_type() + ", Token is: " + token.get_content()
         new_element = ET.Element(IDENTIFIER)
         new_element.text = token.get_content()
         element.append(new_element)
 
     def __compile_keyword(self, element: ET.Element):
         token = self.__tokenizer.next_token()
-        assert token.get_type() == KEYWORD
+        assert token.get_type() == KEYWORD, "Token type is: " + token.get_type() + ", Token is: " + token.get_content()
         new_element = ET.Element(KEYWORD)
         new_element.text = token.get_content()
         element.append(new_element)
@@ -110,10 +119,10 @@ class Parser:
         next_token = self.__tokenizer.peek().get_content()
         while next_token == STATIC or next_token == FIELD:
             self.__compile_class_var_dec(new_element)
-            next_token = self.__tokenizer.peek()
+            next_token = self.__tokenizer.peek().get_content()
         while next_token == CONSTRUCTOR or next_token == FUNCTION or next_token == METHOD:
             self.__compile__subroutine_dec(new_element)
-            next_token = self.__tokenizer.peek()
+            next_token = self.__tokenizer.peek().get_content()
         self.__compile_symbol(new_element, END_BLOCK)
 
     def __compile_class_var_dec(self, element):
@@ -174,7 +183,7 @@ class Parser:
         element.append(new_element)
         self.__compile_symbol(new_element, START_BLOCK)
         while self.__tokenizer.peek().get_content() == VAR:
-            self.__compile_class_var_dec(new_element)
+            self.__compile_var_dec(new_element)
         self.__compile_statements(new_element)
         self.__compile_symbol(new_element, END_BLOCK)
 
@@ -188,6 +197,7 @@ class Parser:
         while next_token == COMMA:
             self.__compile_symbol(new_element, next_token)
             self.__compile_identifier(new_element)
+            next_token = self.__tokenizer.peek().get_content()
         self.__compile_symbol(new_element, SEMICOLON)
 
     def __compile_statements(self, element):
@@ -207,6 +217,7 @@ class Parser:
                 self.__compile_if(new_element)
             else:
                 return
+            next_token = self.__tokenizer.peek().get_content()
 
     def __compile_let(self, element):
         new_element = ET.Element(LET_STATEMENT)
@@ -299,24 +310,27 @@ class Parser:
             new_element.append(newer_element)
         elif next_token.get_type() == STRING_CONSTANT:
             newer_element = ET.Element(STRING_CONSTANT)
-            newer_element.text = self.__tokenizer.next_token().get_content()
+            newer_element.text = self.__tokenizer.next_token().get_content()[1:-1]
             new_element.append(newer_element)
         elif next_token.get_content() in KEYWORD_CONSTS:
             self.__compile_keyword(new_element)
         elif next_token.get_type() == IDENTIFIER:
+            if next_token.get_next_char() == PERIOD:
+                self.__compile_subroutine_call(new_element)
+                return
             self.__compile_identifier(new_element)
             next_token = self.__tokenizer.peek()
             if next_token.get_content() == OPEN_BRACKETS:
                 self.__compile_symbol(new_element, OPEN_BRACKETS)
                 self.__compile_expression(new_element)
                 self.__compile_symbol(new_element, CLOSE_BRACKETS)
-            elif next_token.get_content() == OPEN_PAR:
-                self.__compile_symbol(new_element, OPEN_PAR)
-                self.__compile_subroutine_call(new_element)
-                self.__compile_symbol(new_element, CLOSE_PAR)
         elif next_token.get_content() in UNARY_OPS:
             self.__compile_symbol(new_element, next_token.get_content())
             self.__compile_term(new_element)
+        elif next_token.get_content() == OPEN_PAR:
+            self.__compile_symbol(new_element, OPEN_PAR)
+            self.__compile_expression(new_element)
+            self.__compile_symbol(new_element, CLOSE_PAR)
 
     def __compile_expression_list(self, element):
         new_element = ET.Element(EXPRESSION_LIST)
@@ -331,6 +345,7 @@ class Parser:
         while next_token.get_content() == COMMA:
             self.__compile_symbol(new_element, COMMA)
             self.__compile_expression(new_element)
+            next_token = self.__tokenizer.peek()
 
     def __is_term(self, token: Token):
-        return token.get_type() == STRING_CONSTANT or token.get_type() == INTEGER_CONSTANT or token.get_content() in KEYWORD_CONSTS or token.get_type() == IDENTIFIER or token.get_content() in UNARY_OPS
+        return token.get_type() == STRING_CONSTANT or token.get_type() == INTEGER_CONSTANT or token.get_content() in KEYWORD_CONSTS or token.get_type() == IDENTIFIER or token.get_content() in UNARY_OPS or token.get_content() == OPEN_PAR

@@ -15,7 +15,7 @@ class FileHandler:
         :param source_file:
         :param source_dir:
         """
-        self.__tokenizer = Tokenizer(source_file)
+        self.__tokenizer = Tokenizer(os.path.join(source_dir, source_file))
         self.__parser = Parser(self.__tokenizer)
         self.__target_file_name = os.path.join(source_dir, source_file[:-4] + '.xml')
 
@@ -26,4 +26,4 @@ class FileHandler:
         :return:
         """
         element_tree = self.__parser.parse()
-        element_tree.write(self.__target_file_name)
+        element_tree.write(self.__target_file_name, pretty_print = True)
