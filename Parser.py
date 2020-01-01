@@ -24,8 +24,22 @@ class Parser:
         tree = ET.ElementTree(new_element)
         return tree
 
-    def __compile_symbol(self, element: ET.Element, string: str):
-        self.__tokenizer.eat(string)
+    def __compile_symbol(self, element: ET.Element):
+        token = self.__tokenizer.next_token()
+        string = token.get_content()
         new_element = ET.Element('Symbol')
+        new_element.text = string
+        element.append(new_element)
+
+    def __compile_class(self, element: ET.Element, string: str):
+        element.append(ET.Element('class'))
+        self.__compile_keyword(element)
+        self.__compile_symbol(element)
+
+
+    def __compile_keyword(self, element: ET.Element):
+        token = self.__tokenizer.next_token()
+        string = token.get_content()
+        new_element = ET.Element('Keyword')
         new_element.text = string
         element.append(new_element)
