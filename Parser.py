@@ -82,11 +82,11 @@ class Parser:
         new_element = ET.Element('ROOT')
         try:
             self.__compile_class(new_element)
-        except:
-            ET.dump(new_element)
-            raise
+        except RuntimeError as e:
+            print(e)
+            print("Dumping Tree:\n")
+            ET.dump(new_element[0])
         tree = ET.ElementTree(new_element[0])
-        print(ET.tostring(new_element, pretty_print=True))
 
         return tree
 
