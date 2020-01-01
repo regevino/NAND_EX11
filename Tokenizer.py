@@ -35,7 +35,7 @@ class Tokenizer:
         with open(self.__filename, 'r') as file:
             self.__file = file.read()
 
-    def next_token(self):
+    def next_token(self, cut=True):
         """
         :return: next token
         """
@@ -43,7 +43,8 @@ class Tokenizer:
             match = REGEXS[token].match(self.__file)
             if match:
                 token_content = self.__file[match.pos:match.endpos]
-                self.__file = self.__file[match.endpos:]
+                if cut:
+                    self.__file = self.__file[match.endpos:]
                 return Token(token, token_content)
 
     def has_more_tokens(self):
@@ -54,6 +55,8 @@ class Tokenizer:
         if string != token.get_content():
             raise RuntimeError
 
+    def peek(self):
+        return self.next_token(cut=False)
 
 class Token:
     """
