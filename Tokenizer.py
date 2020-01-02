@@ -4,7 +4,8 @@ KEYWORDS = {'class', 'constructor', 'function', 'method', 'field', 'static', 'va
             'void', 'true', 'false', 'null', 'this', 'let', 'do', 'if', 'else', 'while', 'return'}
 COMMENTS_RE = '\s*(?:\s*(?:(?:\/\*.*?\*\/)|(?:\/\/[^\n]*))\s*)*\s*'
 
-KEYWORD_RE = COMMENTS_RE + "(class|constructor|function|method|field|static|var|int|char|boolean|void|true|false|null|this|let|do|if|else|while|return)"
+KEYWORD_RE = COMMENTS_RE + "(class|constructor|function|method|field|static|var|int|char|boolean|void|" \
+                           "true|false|null|this|let|do|if|else|while|return)"
 SYMBOLS = {'{', '}', '(', ')', '[', ']', '.', ',', ';', '+', '-', '*', '/', '&', '|', '<', '>', '=', '~'}
 SYMBOLS_RE = COMMENTS_RE + "({|}|\(|\)|\[|\]|\.|,|;|\+|-|\*|/|&|\||<|>|=|~)"
 INTEGER_CONSTANT = "integerConstant"
@@ -14,12 +15,12 @@ STRING_CONSTANT_RE = COMMENTS_RE + "(\"[^\"\n]+\")"
 IDENTIFIER = "identifier"
 IDENTIFIER_RE = COMMENTS_RE + "([a-zA-Z_][\w]*)"
 
-
 KEYWORD = "keyword"
 SYMBOL = "symbol"
 
 REGEXS = {KEYWORD: re.compile(KEYWORD_RE, flags=re.DOTALL), SYMBOL: re.compile(SYMBOLS_RE, flags=re.DOTALL),
-          INTEGER_CONSTANT: re.compile(INTEGER_CONSTANT_RE, flags=re.DOTALL), STRING_CONSTANT: re.compile(STRING_CONSTANT_RE, flags=re.DOTALL),
+          INTEGER_CONSTANT: re.compile(INTEGER_CONSTANT_RE, flags=re.DOTALL),
+          STRING_CONSTANT: re.compile(STRING_CONSTANT_RE, flags=re.DOTALL),
           IDENTIFIER: re.compile(IDENTIFIER_RE, flags=re.DOTALL)}
 
 

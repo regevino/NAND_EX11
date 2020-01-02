@@ -19,11 +19,10 @@ class FileHandler:
         self.__parser = Parser(self.__tokenizer)
         self.__target_file_name = os.path.join(source_dir, source_file[:-5] + '.xml')
 
-
     def compile(self):
         """
         compile the .jack file and output the xml result into the relevant file.
         :return:
         """
         element_tree = self.__parser.parse()
-        element_tree.write(self.__target_file_name, pretty_print = True)
+        element_tree.write(self.__target_file_name, pretty_print=True)

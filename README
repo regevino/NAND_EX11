@@ -12,9 +12,10 @@ Dan Regev, ID 208272518, dan.regev@mail.huji.ac.il
 Submitted Files
 ---------------
 README - This file.
-
-
-
+JackAnalyzer.py - A program that compiles jack files.
+Tokenizer.py - a class representing a stream of tokens parsed from a .jack file and a class representing a jack token.
+Parser.py - a class that parses a tokenized jack input into a parse tree.
+FileHandler.py - A class that handles the parsing and compilation of .jack files.
 JackAnalyzer - Shell script to wrap our JackAnalyzer.py script.
 Makefile - Make script to ensure users have execute permissions for VMtranslator.
 

@@ -1,6 +1,3 @@
-import os
-import sys
-# import xml.etree.ElementTree as ET
 from lxml import etree as ET
 from Tokenizer import *
 
@@ -77,7 +74,6 @@ class Parser:
         Parse the token stream until there are no more tokens to parse.
         :return: ElementTree representing the parseTree
         """
-        # TODO: implement
 
         new_element = ET.Element('ROOT')
         try:
@@ -98,7 +94,8 @@ class Parser:
 
     def __compile_identifier(self, element: ET.Element):
         token = self.__tokenizer.next_token()
-        assert token.get_type() == IDENTIFIER, "Token type is: " + token.get_type() + ", Token is: " + token.get_content()
+        assert token.get_type() == IDENTIFIER, "Token type is: " + token.get_type() \
+                                               + ", Token is: " + token.get_content()
         new_element = ET.Element(IDENTIFIER)
         new_element.text = token.get_content()
         element.append(new_element)
@@ -147,7 +144,8 @@ class Parser:
             self.__compile_keyword(element)
         else:
             raise RuntimeError(
-                "Type must be identifier or keyword but token" + next_token.get_content() + "was of type " + next_token.get_type())
+                "Type must be identifier or keyword but token" + next_token.get_content() + "was of type "
+                + next_token.get_type())
 
     def __compile__subroutine_dec(self, element):
         new_element = ET.Element(SUBROUTINE_DEC)
@@ -348,4 +346,6 @@ class Parser:
             next_token = self.__tokenizer.peek()
 
     def __is_term(self, token: Token):
-        return token.get_type() == STRING_CONSTANT or token.get_type() == INTEGER_CONSTANT or token.get_content() in KEYWORD_CONSTS or token.get_type() == IDENTIFIER or token.get_content() in UNARY_OPS or token.get_content() == OPEN_PAR
+        return (token.get_type() == STRING_CONSTANT or token.get_type() == INTEGER_CONSTANT
+                or token.get_content() in KEYWORD_CONSTS or token.get_type() == IDENTIFIER
+                or token.get_content() in UNARY_OPS or token.get_content() == OPEN_PAR)
