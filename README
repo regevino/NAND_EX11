@@ -1,0 +1,25 @@
+avih,regevino
+
+===============================================================================
+Avinoam Hershler, ID 208926964, avinoam.hershler@mail.huji.ac.il
+Dan Regev, ID 208272518, dan.regev@mail.huji.ac.il
+===============================================================================
+
+                           Project 10 - a Jack Analyzer
+                           -------------------------- 
+  
+
+Submitted Files
+---------------
+README - This file.
+
+
+
+JackAnalyzer - Shell script to wrap our JackAnalyzer.py script.
+Makefile - Make script to ensure users have execute permissions for VMtranslator.
+
+
+
+Remarks
+-------
+
