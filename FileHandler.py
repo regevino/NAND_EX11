@@ -17,7 +17,7 @@ class FileHandler:
         """
         self.__tokenizer = Tokenizer(os.path.join(source_dir, source_file))
         self.__parser = Parser(self.__tokenizer)
-        self.__target_file_name = os.path.join(source_dir, source_file[:-4] + '.xml')
+        self.__target_file_name = os.path.join(source_dir, source_file[:-5] + '.xml')
 
 
     def compile(self):
