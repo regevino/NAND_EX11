@@ -5,7 +5,7 @@ KEYWORDS = {'class', 'constructor', 'function', 'method', 'field', 'static', 'va
 COMMENTS_RE = '\s*(?:\s*(?:(?:\/\*.*?\*\/)|(?:\/\/[^\n]*))\s*)*\s*'
 
 KEYWORD_RE = COMMENTS_RE + "(class|constructor|function|method|field|static|var|int|char|boolean|void|" \
-                           "true|false|null|this|let|do|if|else|while|return)"
+                           "true|false|null|this|let|do |if|else|while|return)"
 SYMBOLS = {'{', '}', '(', ')', '[', ']', '.', ',', ';', '+', '-', '*', '/', '&', '|', '<', '>', '=', '~'}
 SYMBOLS_RE = COMMENTS_RE + "({|}|\(|\)|\[|\]|\.|,|;|\+|-|\*|/|&|\||<|>|=|~)"
 INTEGER_CONSTANT = "integerConstant"

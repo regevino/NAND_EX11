@@ -32,7 +32,7 @@ IF = 'if'
 RETURN = 'return'
 WHILE = 'while'
 LET = 'let'
-DO = 'do'
+DO = 'do '
 STATEMENTS = 'statements'
 VAR_DEC = 'varDec'
 SUBROUTINE_BODY = 'subroutineBody'
@@ -198,7 +198,7 @@ class Parser:
             next_token = self.__tokenizer.peek().get_content()
         self.__compile_symbol(new_element, SEMICOLON)
 
-    def __compile_statements(self, element):
+    def __compile_statements(self, element: ET.Element):
         new_element = ET.Element(STATEMENTS)
         element.append(new_element)
         next_token = self.__tokenizer.peek().get_content()
@@ -214,6 +214,8 @@ class Parser:
             elif next_token == IF:
                 self.__compile_if(new_element)
             else:
+                if not new_element:
+                    new_element.text = '\n'
                 return
             next_token = self.__tokenizer.peek().get_content()
 
