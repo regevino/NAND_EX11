@@ -294,7 +294,7 @@ class Parser:
         self.__compile_keyword(new_element)
         self.__compile_symbol(new_element, OPEN_PAR)
         self.__compile_expression(new_element)
-        self.__vm_writer.write_arithmetic('!')
+        self.__vm_writer.write_arithmetic('~')
         if_end_label = f"END_LABEL{self.__if_counter}"
         if_false_label = f"FALSE_LABEL{self.__if_counter}"
         self.__if_counter += 1
@@ -323,7 +323,7 @@ class Parser:
         self.__vm_writer.write_label(while_label)
         self.__compile_symbol(new_element, OPEN_PAR)
         self.__compile_expression(new_element)
-        self.__vm_writer.write_arithmetic('!')
+        self.__vm_writer.write_arithmetic('~')
         self.__vm_writer.write_if_goto(end_label)
         self.__compile_symbol(new_element, CLOSE_PAR)
         self.__compile_symbol(new_element, START_BLOCK)
@@ -360,7 +360,7 @@ class Parser:
             self.__compile_symbol(new_element, CLOSE_PAR)
         self.__vm_writer.write_call(func_name)
 
-    # NOT DONE
+    # DONE
     def __compile_return(self, element):
         new_element = ET.Element(RETURN_STATEMENT)
         element.append(new_element)
@@ -369,7 +369,7 @@ class Parser:
         if next_token != SEMICOLON:
             self.__compile_expression(new_element)
         self.__compile_symbol(new_element, SEMICOLON)
-        self.__vm_writer.write_return()  # TODO self.__vm_writer.write_push_constant('0')???
+        self.__vm_writer.write_return()
 
     # NOT DONE
     def __compile_term(self, element):
@@ -407,7 +407,7 @@ class Parser:
         elif next_token.get_content() in UNARY_OPS:
             op = self.__compile_symbol(new_element, next_token.get_content())
             self.__compile_term(new_element)
-            self.__vm_writer.write_arithmetic(op)
+            self.__vm_writer.write_arithmetic(op, unary=True)
         elif next_token.get_content() == OPEN_PAR:
             self.__compile_symbol(new_element, OPEN_PAR)
             self.__compile_expression(new_element)

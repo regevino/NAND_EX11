@@ -22,13 +22,16 @@ class VMWriter:
     def write_pop_temp(self):
         self.__lines.append('pop temp 0')
 
-    def write_arithmetic(self, op: str):  # '*/<>='
-        if op == '!':
-            self.__lines.append('neg')
+    def write_arithmetic(self, op: str, unary=False):
+        if op == '~':
+            self.__lines.append('not')
         elif op == '+':
             self.__lines.append('add')
         elif op == '-':
-            self.__lines.append('sub')
+            if unary:
+                self.__lines.append('neg')
+            else:
+                self.__lines.append('sub')
         elif op == '&':
             self.__lines.append('and')
         elif op == '|':
@@ -39,6 +42,10 @@ class VMWriter:
             self.__lines.append('gt')
         elif op == '=':
             self.__lines.append('eq')
+        elif op == '*':
+            self.__lines.append('Math.multiply()')
+        elif op == '/':
+            self.__lines.append('Math.divide()')
 
     def write_call(self, func_name: str, arg_num: int):
         self.__lines.append('call ' + func_name + str(arg_num))
