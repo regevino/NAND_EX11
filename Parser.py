@@ -360,7 +360,7 @@ class Parser:
             self.__compile_symbol(new_element, CLOSE_PAR)
         self.__vm_writer.write_call(func_name)
 
-    # DONE
+    # NOT DONE
     def __compile_return(self, element):
         new_element = ET.Element(RETURN_STATEMENT)
         element.append(new_element)
@@ -369,7 +369,7 @@ class Parser:
         if next_token != SEMICOLON:
             self.__compile_expression(new_element)
         self.__compile_symbol(new_element, SEMICOLON)
-        self.__vm_writer.write_return()
+        self.__vm_writer.write_return()  # TODO self.__vm_writer.write_push_constant('0')???
 
     # NOT DONE
     def __compile_term(self, element):
