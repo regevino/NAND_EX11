@@ -84,4 +84,6 @@ class SymbolTable:
             return None
 
     def get_field_num(self) -> int:
-        return len(list(filter(lambda x: (x.get_segment() == 'this'), self.__class_table.keys())))
+        # print(self.__class_table.keys())
+        # exit(1)
+        return len(list(filter(lambda x: (self.__class_table[x].get_segment() == 'this'), self.__class_table.keys())))
