@@ -26,7 +26,9 @@ class VMWriter:
             self.__lines.append('call String.appendChar 2')
 
     def is_object(self, name: str):
-        return self.__symbol_table.look_up_symbol(name) is not None
+        symbol = self.__symbol_table.look_up_symbol(name)
+        if symbol:
+            return symbol.get_type()
 
     def write_push_keyword_constant(self, keyword: str):
         if keyword == 'null' or keyword == 'false':
@@ -97,9 +99,8 @@ class VMWriter:
     def write_return(self):
         self.__lines.append('return')
 
-    def declare_func(self, func_name: str, args: typing.List[typing.Tuple[str, str]]):
-        self.__lines.append(f'function {func_name} {len(args)}')
-        self.__symbol_table.start_subroutine()
+    def declare_func(self, func_name: str, args: typing.List[typing.Tuple[str, str]], num_vars: int):
+        self.__lines.append(f'function {func_name} {num_vars}')
         for arg in args:
             self.__symbol_table.register_symbol(arg[0], arg[1], Symbol.ARGS)
 
@@ -116,4 +117,6 @@ class VMWriter:
         self.__lines.append('pop pointer 1')
         self.__lines.append('push that 0')
 
+    def start_subroutine(self):
+        self.__symbol_table.start_subroutine()
 

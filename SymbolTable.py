@@ -33,6 +33,9 @@ class Symbol:
     def get_index(self):
         return self.__index
 
+    def get_type(self):
+        return self.__type
+
 
 class SymbolTable:
     """

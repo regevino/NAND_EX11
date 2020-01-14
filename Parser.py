@@ -184,10 +184,8 @@ class Parser:
             args = ['this']
         args += self.__compile_parameter_list(new_element)
         self.__compile_symbol(new_element, CLOSE_PAR)
-        self.__vm_writer.declare_func(func_name, args)
-        if kind == METHOD:
-            self.__vm_writer.write_set_this()
-        self.__compile_subroutine_body(new_element, type_of, kind)
+
+        self.__compile_subroutine_body(new_element,func_name, args, type_of, kind)
 
     # DONE
     def __compile_parameter_list(self, element) -> typing.List[typing.Tuple[str, str]]:
@@ -210,20 +208,25 @@ class Parser:
         return args
 
     # DONE
-    def __compile_subroutine_body(self, element, type_of: str, kind: str):
+    def __compile_subroutine_body(self, element, func_name, args,  type_of: str, kind: str):
         new_element = ET.Element(SUBROUTINE_BODY)
         element.append(new_element)
-        if kind == CONSTRUCTOR:
-            self.__vm_writer.write_constructor_alloc()
+        self.__vm_writer.start_subroutine()
         self.__compile_symbol(new_element, START_BLOCK)
         is_void = type_of == VOID
+        num_vars = 0
         while self.__tokenizer.peek().get_content() == VAR:
-            self.__compile_var_dec(new_element)
+            num_vars += self.__compile_var_dec(new_element)
+        self.__vm_writer.declare_func(func_name, args, num_vars)
+        if kind == METHOD:
+            self.__vm_writer.write_set_this()
+        if kind == CONSTRUCTOR:
+            self.__vm_writer.write_constructor_alloc()
         self.__compile_statements(new_element, is_void)
         self.__compile_symbol(new_element, END_BLOCK)
 
     # DONE
-    def __compile_var_dec(self, element):
+    def __compile_var_dec(self, element) -> int:
         new_element = ET.Element(VAR_DEC)
         element.append(new_element)
         self.__compile_keyword(new_element)
@@ -238,6 +241,7 @@ class Parser:
         self.__compile_symbol(new_element, SEMICOLON)
         for var in var_names:
             self.__vm_writer.declare_var(var, Symbol.LOCAL, type_of)
+        return len(var_names)
 
     # DONE
     def __compile_statements(self, element: ET.Element, is_void: bool = False):
@@ -374,12 +378,15 @@ class Parser:
         elif next_token == PERIOD:
             name = func_name
             func_name += self.__compile_symbol(new_element, PERIOD)
-            func_name += self.__compile_identifier(new_element)
+            identifier = self.__compile_identifier(new_element)
+            func_name += identifier
             self.__compile_symbol(new_element, OPEN_PAR)
             num_args = 0
-            if self.__vm_writer.is_object(name):
+            type_of_obj = self.__vm_writer.is_object(name)
+            if type_of_obj:
                 self.__vm_writer.write_push_var(name)
                 num_args = 1
+                func_name = f'{type_of_obj}.{identifier}'
             num_args += self.__compile_expression_list(new_element)
             self.__compile_symbol(new_element, CLOSE_PAR)
         else:
