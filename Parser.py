@@ -373,7 +373,8 @@ class Parser:
         if next_token == OPEN_PAR:
             func_name = self.__class_name + '.' + func_name
             self.__compile_symbol(new_element, OPEN_PAR)
-            num_args = self.__compile_expression_list(new_element)
+            self.__vm_writer.write_push_keyword_constant('this')
+            num_args = self.__compile_expression_list(new_element) + 1
             self.__compile_symbol(new_element, CLOSE_PAR)
         elif next_token == PERIOD:
             name = func_name
