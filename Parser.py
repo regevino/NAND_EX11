@@ -1,3 +1,4 @@
+import typing
 from lxml import etree as ET
 
 from SymbolTable import Symbol
@@ -76,7 +77,7 @@ class Parser:
         self.__if_counter = 0
         self.__while_counter = 0
 
-    def parse(self) -> ET.ElementTree:
+    def parse(self) -> typing.List[str]:
         """
         Parse the token stream until there are no more tokens to parse.
         :return: ElementTree representing the parseTree
@@ -89,9 +90,9 @@ class Parser:
             print(e)
             print("Dumping Tree:\n")
             ET.dump(new_element[0])
-        tree = ET.ElementTree(new_element[0])
+        # tree = ET.ElementTree(new_element[0])
 
-        return tree
+        return self.__vm_writer.get_lines()
 
     # DONE
     def __compile_symbol(self, element: ET.Element, string):
@@ -171,29 +172,30 @@ class Parser:
         func_name = self.__class_name + '.'
         new_element = ET.Element(SUBROUTINE_DEC)
         element.append(new_element)
-        self.__compile_keyword(new_element)
-        is_void = False
+        kind = self.__compile_keyword(new_element)
         if self.__tokenizer.peek().get_content() == VOID:
-            is_void = True
-            self.__compile_keyword(new_element)
+            type_of = self.__compile_keyword(new_element)
         else:
-            self.__compile_type(new_element)
+            type_of = self.__compile_type(new_element)
         func_name += self.__compile_identifier(new_element)
         self.__compile_symbol(new_element, OPEN_PAR)
-        args = self.__compile_parameter_list(new_element)
+        args = []
+        if kind == METHOD:
+            args = ['this']
+        args += self.__compile_parameter_list(new_element)
         self.__compile_symbol(new_element, CLOSE_PAR)
-        # TODO handle methods
         self.__vm_writer.declare_func(func_name, args)
-
-        self.__compile_subroutine_body(new_element, is_void)
+        if kind == METHOD:
+            self.__vm_writer.write_set_this()
+        self.__compile_subroutine_body(new_element, type_of, kind)
 
     # DONE
-    def __compile_parameter_list(self, element):
+    def __compile_parameter_list(self, element) -> typing.List[typing.Tuple[str, str]]:
         new_element = ET.Element(PARAMETER_LIST)
         element.append(new_element)
         if self.__tokenizer.peek().get_content() == CLOSE_PAR:
             new_element.text = '\n'
-            return
+            return []
         args = []
         type_of = self.__compile_type(new_element)
         name = self.__compile_identifier(new_element)
@@ -208,17 +210,17 @@ class Parser:
         return args
 
     # DONE
-    def __compile_subroutine_body(self, element, is_void=False):
+    def __compile_subroutine_body(self, element, type_of: str, kind: str):
         new_element = ET.Element(SUBROUTINE_BODY)
         element.append(new_element)
+        if kind == CONSTRUCTOR:
+            self.__vm_writer.write_constructor_alloc()
         self.__compile_symbol(new_element, START_BLOCK)
+        is_void = type_of == VOID
         while self.__tokenizer.peek().get_content() == VAR:
             self.__compile_var_dec(new_element)
-        self.__compile_statements(new_element)
+        self.__compile_statements(new_element, is_void)
         self.__compile_symbol(new_element, END_BLOCK)
-        if is_void:
-            self.__vm_writer.write_push_constant('0')
-            self.__vm_writer.write_return()
 
     # DONE
     def __compile_var_dec(self, element):
@@ -231,14 +233,14 @@ class Parser:
         next_token = self.__tokenizer.peek().get_content()
         while next_token == COMMA:
             self.__compile_symbol(new_element, next_token)
-            self.__compile_identifier(new_element)
+            var_names.append(self.__compile_identifier(new_element))
             next_token = self.__tokenizer.peek().get_content()
         self.__compile_symbol(new_element, SEMICOLON)
         for var in var_names:
             self.__vm_writer.declare_var(var, Symbol.LOCAL, type_of)
 
     # DONE
-    def __compile_statements(self, element: ET.Element):
+    def __compile_statements(self, element: ET.Element, is_void: bool = False):
         new_element = ET.Element(STATEMENTS)
         element.append(new_element)
         next_token = self.__tokenizer.peek().get_content()
@@ -250,7 +252,7 @@ class Parser:
             elif next_token == WHILE:
                 self.__compile_while(new_element)
             elif next_token == RETURN:
-                self.__compile_return(new_element)
+                self.__compile_return(new_element, is_void)
             elif next_token == IF:
                 self.__compile_if(new_element)
             else:
@@ -266,14 +268,26 @@ class Parser:
         self.__compile_keyword(new_element)
         var_name = self.__compile_identifier(new_element)
         if self.__tokenizer.peek().get_content() == OPEN_BRACKETS:
-            # TODO
+
+            self.__vm_writer.write_push_var(var_name)
+
             self.__compile_symbol(new_element, OPEN_BRACKETS)
             self.__compile_expression(new_element)
             self.__compile_symbol(new_element, CLOSE_BRACKETS)
-        self.__compile_symbol(new_element, EQUALS)
-        self.__compile_expression(new_element)
-        self.__compile_symbol(new_element, SEMICOLON)
-        self.__vm_writer.write_pop_var(var_name)
+
+            self.__vm_writer.write_arithmetic('+')
+
+            self.__compile_symbol(new_element, EQUALS)
+            self.__compile_expression(new_element)
+            self.__compile_symbol(new_element, SEMICOLON)
+
+            self.__vm_writer.write_access_array()
+        else:
+
+            self.__compile_symbol(new_element, EQUALS)
+            self.__compile_expression(new_element)
+            self.__compile_symbol(new_element, SEMICOLON)
+            self.__vm_writer.write_pop_var(var_name)
 
     # DONE
     def __compile_expression(self, element):
@@ -294,7 +308,7 @@ class Parser:
         self.__compile_keyword(new_element)
         self.__compile_symbol(new_element, OPEN_PAR)
         self.__compile_expression(new_element)
-        self.__vm_writer.write_arithmetic('~')
+        self.__vm_writer.write_arithmetic('~', unary=True)
         if_end_label = f"END_LABEL{self.__if_counter}"
         if_false_label = f"FALSE_LABEL{self.__if_counter}"
         self.__if_counter += 1
@@ -304,10 +318,10 @@ class Parser:
         self.__compile_statements(new_element)
         self.__compile_symbol(new_element, END_BLOCK)
         self.__vm_writer.write_goto(if_end_label)
+        self.__vm_writer.write_label(if_false_label)
         if self.__tokenizer.peek().get_content() == ELSE:
             self.__compile_keyword(new_element)
             self.__compile_symbol(new_element, START_BLOCK)
-            self.__vm_writer.write_label(if_false_label)
             self.__compile_statements(new_element)
             self.__compile_symbol(new_element, END_BLOCK)
         self.__vm_writer.write_label(if_end_label)
@@ -320,16 +334,22 @@ class Parser:
         self.__while_counter += 1
         element.append(new_element)
         self.__compile_keyword(new_element)
+
         self.__vm_writer.write_label(while_label)
+
         self.__compile_symbol(new_element, OPEN_PAR)
         self.__compile_expression(new_element)
-        self.__vm_writer.write_arithmetic('~')
+
+        self.__vm_writer.write_arithmetic('~', unary=True)
         self.__vm_writer.write_if_goto(end_label)
+
         self.__compile_symbol(new_element, CLOSE_PAR)
         self.__compile_symbol(new_element, START_BLOCK)
         self.__compile_statements(new_element)
+
         self.__vm_writer.write_goto(while_label)
         self.__vm_writer.write_label(end_label)
+
         self.__compile_symbol(new_element, END_BLOCK)
 
     # DONE
@@ -345,23 +365,29 @@ class Parser:
     def __compile_subroutine_call(self, element):
         new_element = element
         func_name = self.__compile_identifier(new_element)
-        # TODO handle methods.
         next_token = self.__tokenizer.peek().get_content()
         if next_token == OPEN_PAR:
             func_name = self.__class_name + '.' + func_name
             self.__compile_symbol(new_element, OPEN_PAR)
-            self.__compile_expression_list(new_element)
+            num_args = self.__compile_expression_list(new_element)
             self.__compile_symbol(new_element, CLOSE_PAR)
         elif next_token == PERIOD:
+            name = func_name
             func_name += self.__compile_symbol(new_element, PERIOD)
             func_name += self.__compile_identifier(new_element)
             self.__compile_symbol(new_element, OPEN_PAR)
-            self.__compile_expression_list(new_element)
+            num_args = 0
+            if self.__vm_writer.is_object(name):
+                self.__vm_writer.write_push_var(name)
+                num_args = 1
+            num_args += self.__compile_expression_list(new_element)
             self.__compile_symbol(new_element, CLOSE_PAR)
-        self.__vm_writer.write_call(func_name)
+        else:
+            raise RuntimeError(f'Something went wrong when calling function: {func_name}')
+        self.__vm_writer.write_call(func_name, num_args)
 
     # DONE
-    def __compile_return(self, element):
+    def __compile_return(self, element, is_void: bool):
         new_element = ET.Element(RETURN_STATEMENT)
         element.append(new_element)
         self.__compile_keyword(new_element)
@@ -369,6 +395,8 @@ class Parser:
         if next_token != SEMICOLON:
             self.__compile_expression(new_element)
         self.__compile_symbol(new_element, SEMICOLON)
+        if is_void:
+            self.__vm_writer.write_push_int_constant('0')
         self.__vm_writer.write_return()
 
     # NOT DONE
@@ -381,27 +409,28 @@ class Parser:
             constant = self.__tokenizer.next_token().get_content()
             newer_element.text = constant
             new_element.append(newer_element)
-            self.__vm_writer.write_push_constant(constant)
+            self.__vm_writer.write_push_int_constant(constant)
         elif next_token.get_type() == STRING_CONSTANT:
-            # TODO
             newer_element = ET.Element(STRING_CONSTANT)
             newer_element.text = self.__tokenizer.next_token().get_content()[1:-1]
             new_element.append(newer_element)
+            self.__vm_writer.write_push_string_constant(next_token.get_content()[1:-1])
         elif next_token.get_content() in KEYWORD_CONSTS:
             self.__compile_keyword(new_element)
-            # TODO
+            self.__vm_writer.write_push_keyword_constant(next_token.get_content())
         elif next_token.get_type() == IDENTIFIER:
             if next_token.get_next_char() == PERIOD:
                 self.__compile_subroutine_call(new_element)
                 return
-
             var_name = self.__compile_identifier(new_element)
             next_token = self.__tokenizer.peek()
             if next_token.get_content() == OPEN_BRACKETS:
-                # TODO
+                self.__vm_writer.write_push_var(var_name)
                 self.__compile_symbol(new_element, OPEN_BRACKETS)
                 self.__compile_expression(new_element)
                 self.__compile_symbol(new_element, CLOSE_BRACKETS)
+                self.__vm_writer.write_arithmetic('+')
+                self.__vm_writer.write_get_array()
             else:
                 self.__vm_writer.write_push_var(var_name)
         elif next_token.get_content() in UNARY_OPS:
@@ -414,20 +443,24 @@ class Parser:
             self.__compile_symbol(new_element, CLOSE_PAR)
 
     # DONE
-    def __compile_expression_list(self, element):
+    def __compile_expression_list(self, element) -> int:
         new_element = ET.Element(EXPRESSION_LIST)
+        expression_num = 0
         element.append(new_element)
         next_token = self.__tokenizer.peek()
         if self.__is_term(next_token):
             self.__compile_expression(new_element)
+            expression_num += 1
         else:
             new_element.text = '\n'
-            return
+            return expression_num
         next_token = self.__tokenizer.peek()
         while next_token.get_content() == COMMA:
             self.__compile_symbol(new_element, COMMA)
             self.__compile_expression(new_element)
+            expression_num += 1
             next_token = self.__tokenizer.peek()
+        return expression_num
 
     # DONE
     def __is_term(self, token: Token):

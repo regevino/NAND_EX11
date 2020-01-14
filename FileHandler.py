@@ -17,12 +17,14 @@ class FileHandler:
         """
         self.__tokenizer = Tokenizer(os.path.join(source_dir, source_file))
         self.__parser = Parser(self.__tokenizer)
-        self.__target_file_name = os.path.join(source_dir, source_file[:-5] + '.xml')
+        self.__target_file_name = os.path.join(source_dir, source_file[:-5] + '.vm')
 
     def compile(self):
         """
         compile the .jack file and output the xml result into the relevant file.
         :return:
         """
-        element_tree = self.__parser.parse()
-        element_tree.write(self.__target_file_name, pretty_print=True)
+        lines = self.__parser.parse()
+        # element_tree.write(self.__target_file_name, pretty_print=True)
+        with open(self.__target_file_name, 'w') as file:
+            file.write('\n'.join(lines))
