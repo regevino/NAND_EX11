@@ -18,7 +18,7 @@
 # need to be run before this rule) and commands that are run one after the other. The "all" rule is what 
 # runs when you call "make":
 all:
-	chmod a+x JackAnalyzer
+	chmod a+x JackCompiler
 
 # As you can see, all it does is grant execution permissions for your run time executable, so your project 
 # will be able to run on the graders' computers. In this case, the "all" rule has no preqrequisites.

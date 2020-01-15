@@ -13,4 +13,4 @@
 # For example, if you're using python version 3, the command should be "python3" instead of "python".
 # For this file (Assembler-python) to run when you call "Assembler", rename it to "Assembler".
 
-python3 JackAnalyzer.py $*
+python3 JackCompiler.py $*
