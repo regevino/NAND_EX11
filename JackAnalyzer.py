@@ -20,4 +20,3 @@ if __name__ == '__main__':
     for file in filter(lambda file: file[-5:] == ".jack", file_list):
         handler = FileHandler(file, source_dir)
         handler.compile()
-

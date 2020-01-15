@@ -3,30 +3,19 @@ from lxml import etree as ET
 
 from SymbolTable import Symbol
 from Tokenizer import *
-from VMWrter import VMWriter
+from VMWriter import VMWriter
 
 EXPRESSION_LIST = 'expressionList'
-
 TERM = 'term'
-
 RETURN_STATEMENT = 'returnStatement'
-
 DO_STATEMENT = 'doStatement'
-
 WHILE_STATEMENT = 'whileStatement'
-
 IF_STATEMENT = 'ifStatement'
-
 EXPRESSION = 'expression'
-
 UNARY_OPS = '-~'
-
 KEYWORD_CONSTS = ['true', 'false', 'null', 'this']
-
 PERIOD = '.'
-
 OPS = '+-*/&|<>='
-
 ELSE = 'else'
 EQUALS = '='
 CLOSE_BRACKETS = ']'
@@ -94,7 +83,6 @@ class Parser:
 
         return self.__vm_writer.get_lines()
 
-    # DONE
     def __compile_symbol(self, element: ET.Element, string):
         self.__tokenizer.eat(string)
         new_element = ET.Element(SYMBOL)
@@ -102,7 +90,6 @@ class Parser:
         element.append(new_element)
         return string
 
-    # DONE
     def __compile_identifier(self, element: ET.Element):
         token = self.__tokenizer.next_token()
         assert token.get_type() == IDENTIFIER, "Token type is: " + token.get_type() \
@@ -112,7 +99,6 @@ class Parser:
         element.append(new_element)
         return token.get_content()
 
-    # DONE
     def __compile_keyword(self, element: ET.Element):
         token = self.__tokenizer.next_token()
         assert token.get_type() == KEYWORD, "Token type is: " + token.get_type() + ", Token is: " + token.get_content()
@@ -121,7 +107,6 @@ class Parser:
         element.append(new_element)
         return token.get_content()
 
-    # DONE
     def __compile_class(self, element: ET.Element):
         new_element = ET.Element(CLASS_TAG)
         element.append(new_element)
@@ -137,7 +122,6 @@ class Parser:
             next_token = self.__tokenizer.peek().get_content()
         self.__compile_symbol(new_element, END_BLOCK)
 
-    # DONE
     def __compile_class_var_dec(self, element):
         new_element = ET.Element(CLASS_VAR_DEC)
         element.append(new_element)
@@ -154,7 +138,6 @@ class Parser:
         for var in var_names:
             self.__vm_writer.declare_var(var, kind, type_of)
 
-    # DONE
     def __compile_type(self, element):
         next_token = self.__tokenizer.peek()
         if next_token.get_type() == IDENTIFIER:
@@ -166,9 +149,7 @@ class Parser:
                 "Type must be identifier or keyword but token" + next_token.get_content() + "was of type "
                 + next_token.get_type())
 
-    # NOT DONE
     def __compile__subroutine_dec(self, element):
-
         func_name = self.__class_name + '.'
         new_element = ET.Element(SUBROUTINE_DEC)
         element.append(new_element)
@@ -185,9 +166,8 @@ class Parser:
         args += self.__compile_parameter_list(new_element)
         self.__compile_symbol(new_element, CLOSE_PAR)
 
-        self.__compile_subroutine_body(new_element,func_name, args, type_of, kind)
+        self.__compile_subroutine_body(new_element, func_name, args, type_of, kind)
 
-    # DONE
     def __compile_parameter_list(self, element) -> typing.List[typing.Tuple[str, str]]:
         new_element = ET.Element(PARAMETER_LIST)
         element.append(new_element)
@@ -207,7 +187,6 @@ class Parser:
             args.append((name, type_of))
         return args
 
-    # DONE
     def __compile_subroutine_body(self, element, func_name, args,  type_of: str, kind: str):
         new_element = ET.Element(SUBROUTINE_BODY)
         element.append(new_element)
@@ -225,7 +204,6 @@ class Parser:
         self.__compile_statements(new_element, is_void)
         self.__compile_symbol(new_element, END_BLOCK)
 
-    # DONE
     def __compile_var_dec(self, element) -> int:
         new_element = ET.Element(VAR_DEC)
         element.append(new_element)
@@ -243,7 +221,6 @@ class Parser:
             self.__vm_writer.declare_var(var, Symbol.LOCAL, type_of)
         return len(var_names)
 
-    # DONE
     def __compile_statements(self, element: ET.Element, is_void: bool = False):
         new_element = ET.Element(STATEMENTS)
         element.append(new_element)
@@ -265,7 +242,6 @@ class Parser:
                 return
             next_token = self.__tokenizer.peek().get_content()
 
-    # NOT DONE
     def __compile_let(self, element):
         new_element = ET.Element(LET_STATEMENT)
         element.append(new_element)
@@ -293,7 +269,6 @@ class Parser:
             self.__compile_symbol(new_element, SEMICOLON)
             self.__vm_writer.write_pop_var(var_name)
 
-    # DONE
     def __compile_expression(self, element):
         new_element = ET.Element(EXPRESSION)
         element.append(new_element)
@@ -305,7 +280,6 @@ class Parser:
             next_token = self.__tokenizer.peek().get_content()
             self.__vm_writer.write_arithmetic(op)
 
-    # DONE
     def __compile_if(self, element):
         new_element = ET.Element(IF_STATEMENT)
         element.append(new_element)
@@ -330,7 +304,6 @@ class Parser:
             self.__compile_symbol(new_element, END_BLOCK)
         self.__vm_writer.write_label(if_end_label)
 
-    # DONE
     def __compile_while(self, element):
         new_element = ET.Element(WHILE_STATEMENT)
         while_label = f'WHILE_START{self.__while_counter}'
@@ -356,7 +329,6 @@ class Parser:
 
         self.__compile_symbol(new_element, END_BLOCK)
 
-    # DONE
     def __compile_do(self, element):
         new_element = ET.Element(DO_STATEMENT)
         element.append(new_element)
@@ -365,7 +337,6 @@ class Parser:
         self.__vm_writer.write_pop_temp()
         self.__compile_symbol(new_element, SEMICOLON)
 
-    # NOT DONE
     def __compile_subroutine_call(self, element):
         new_element = element
         func_name = self.__compile_identifier(new_element)
@@ -394,7 +365,6 @@ class Parser:
             raise RuntimeError(f'Something went wrong when calling function: {func_name}')
         self.__vm_writer.write_call(func_name, num_args)
 
-    # DONE
     def __compile_return(self, element, is_void: bool):
         new_element = ET.Element(RETURN_STATEMENT)
         element.append(new_element)
@@ -407,7 +377,6 @@ class Parser:
             self.__vm_writer.write_push_int_constant('0')
         self.__vm_writer.write_return()
 
-    # NOT DONE
     def __compile_term(self, element):
         new_element = ET.Element(TERM)
         element.append(new_element)
@@ -450,7 +419,6 @@ class Parser:
             self.__compile_expression(new_element)
             self.__compile_symbol(new_element, CLOSE_PAR)
 
-    # DONE
     def __compile_expression_list(self, element) -> int:
         new_element = ET.Element(EXPRESSION_LIST)
         expression_num = 0
@@ -470,7 +438,6 @@ class Parser:
             next_token = self.__tokenizer.peek()
         return expression_num
 
-    # DONE
     def __is_term(self, token: Token):
         return (token.get_type() == STRING_CONSTANT or token.get_type() == INTEGER_CONSTANT
                 or token.get_content() in KEYWORD_CONSTS or token.get_type() == IDENTIFIER

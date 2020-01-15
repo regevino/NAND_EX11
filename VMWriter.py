@@ -119,4 +119,3 @@ class VMWriter:
 
     def start_subroutine(self):
         self.__symbol_table.start_subroutine()
-

@@ -50,7 +50,6 @@ class SymbolTable:
         self.__subroutine_table = {}
         self.__kind_count = {Symbol.ARGS: 0, Symbol.FIELD: 0, Symbol.LOCAL: 0, Symbol.STATIC: 0}
 
-
     def register_symbol(self, name: str, type_of: str, kind: str):
         """
         register a new symbol on the table
@@ -69,7 +68,6 @@ class SymbolTable:
         else:
             raise RuntimeError(f'Unknown kind {kind}')
 
-
     def start_subroutine(self):
         """
         start a new subroutine table
@@ -87,6 +85,4 @@ class SymbolTable:
             return None
 
     def get_field_num(self) -> int:
-        # print(self.__class_table.keys())
-        # exit(1)
         return len(list(filter(lambda x: (self.__class_table[x].get_segment() == 'this'), self.__class_table.keys())))
